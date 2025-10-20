@@ -35,9 +35,9 @@ importers:
       micromatch:
         specifier: ^4.0.8
         version: 4.0.8
-      mime-type:
-        specifier: ^5.0.3
-        version: 5.0.3
+      mime:
+        specifier: ^4.1.0
+        version: 4.1.0
       yaml:
         specifier: ^2.8.1
         version: 2.8.1
@@ -202,10 +202,6 @@ packages:
     resolution: {integrity: sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow==}
     engines: {node: '>= 6'}
 
-  inherits-ex@2.1.0:
-    resolution: {integrity: sha512-lvIiDNc3vA/RjtYmXSNYaJU4z2JYijO90V0MDC63mDoCuwjGok67u1Cl6vN5xgYkY5m6sOzo3fCKRqSXLq00zA==}
-    engines: {node: '>=12'}
-
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
@@ -233,20 +229,14 @@ packages:
     resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
 
-  mime-type@5.0.3:
-    resolution: {integrity: sha512-GR1ptYpYx+Z0orOFlIZXZrMvDxUAvOwquNt1Bymon+cw7yYf1z5WipyzsNv0rhQ18lj+F688Yet8qD+rrKRIHw==}
-    engines: {node: '>= 8.6'}
-
-  path.js@2.0.1:
-    resolution: {integrity: sha512-vMXZqQ9i6dAS9sU9lYqxtsc9HCY3i+Ca523+DWEp0nIRNQvRzMpoyMSu9lejp0lv4DLF0jsVpRVljnQ1zaqmGA==}
+  mime@4.1.0:
+    resolution: {integrity: sha512-X5ju04+cAzsojXKes0B/S4tcYtFAJ6tTMuSPBEn9CPGlrWr8Fiw7qYeLT0XyH80HSoAoqWCaz+MWKh22P7G1cw==}
+    engines: {node: '>=16'}
+    hasBin: true
 
   picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
-
-  picomatch@4.0.3:
-    resolution: {integrity: sha512-5gTmgEY/sqK6gFXLIsQNH19lWb4ebPDLA4SdLP7dsWkIXHWlG66oPuVvXSGFPppYZz8ZDZq0dYYrbHfBCVUb1Q==}
-    engines: {node: '>=12'}
 
   queue-microtask@1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
@@ -276,10 +266,6 @@ packages:
 
   undici-types@7.14.0:
     resolution: {integrity: sha512-QQiYxHuyZ9gQUIrmPo3IA+hUl4KYk8uSA7cHrcKd/l3p1OTpZcM0Tbp9x7FAtXdAYhlasd60ncPpgu6ihG6TOA==}
-
-  util-ex@2.3.0:
-    resolution: {integrity: sha512-Tdp/cRu29WkhLIQfbgOLtBfT4CAj1fnyYpjGfzKSuZKodyxLE/wMsimzRy/Y+CXtZeUrFzuE/5cejZWYx3dQIw==}
-    engines: {node: '>=8'}
 
   yaml@2.8.1:
     resolution: {integrity: sha512-lcYcMxX2PO9XMGvAJkJ3OsNMw+/7FKes7/hgerGUYWIoWu5j/+YQqcZr5JnPZWzOsEBgMbSbiSTn/dv/69Mkpw==}
@@ -403,8 +389,6 @@ snapshots:
     dependencies:
       is-glob: 4.0.3
 
-  inherits-ex@2.1.0: {}
-
   is-extglob@2.1.1: {}
 
   is-fullwidth-code-point@3.0.0: {}
@@ -424,20 +408,9 @@ snapshots:
       braces: 3.0.3
       picomatch: 2.3.1
 
-  mime-type@5.0.3:
-    dependencies:
-      path.js: 2.0.1
-      picomatch: 4.0.3
-      util-ex: 2.3.0
-
-  path.js@2.0.1:
-    dependencies:
-      inherits-ex: 2.1.0
-      util-ex: 2.3.0
+  mime@4.1.0: {}
 
   picomatch@2.3.1: {}
-
-  picomatch@4.0.3: {}
 
   queue-microtask@1.2.3: {}
 
@@ -464,9 +437,5 @@ snapshots:
       is-number: 7.0.0
 
   undici-types@7.14.0: {}
-
-  util-ex@2.3.0:
-    dependencies:
-      inherits-ex: 2.1.0
 
   yaml@2.8.1: {}

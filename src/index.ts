@@ -8,12 +8,14 @@ import { crawl } from './utils.js';
 import { Readable } from 'node:stream';
 import { createHash } from 'node:crypto';
 import { finished } from 'node:stream/promises';
-import { mimeType as mime } from 'mime-type/with-db';
+import mime from 'mime';
 import fastGlob from 'fast-glob';
+
+import 'dotenv/config';
 
 const defaultConfigDirectory = path.join(os.homedir(), '.config/immich/');
 
-const jsons = await fastGlob.glob(path.join(process.env.DISCORD_DATA_PACKAGE_DIR!, 'messages/**/messages.json'), {
+const jsons = await fastGlob.glob(path.join(process.env.DISCORD_DATA_PACKAGE_DIR!, 'messages/**/messages.json').replace(/\\/g, '/'), {
     absolute: true,
     caseSensitiveMatch: false,
     dot: true,
@@ -63,13 +65,20 @@ async function download(ts: string, attachment: string) {
     const hash = createHash('sha1').update(attachment).digest('hex');
 
     const filename = `${ts}-${hash}-${new URL(attachment).pathname.split('/').pop()?.replace(/\..+?$/,'') ?? ''}`; // remove extension if any
+    const originalExtension = new URL(attachment).pathname.split('/').pop()?.split('.').pop();
 
     const res = await fetch(attachment);
     const contentType = res.headers.get('content-type');
 
-    let extension = mime.extension(contentType || 'application/octet-stream') || 'bin';
+    let extension = mime.getExtension(contentType || 'application/octet-stream') || originalExtension || 'bin';
     if (extension === 'qt') {
         extension = 'mov'; // QuickTime video files
+    } else if (extension === 'oga') {
+        extension = 'ogg'; // Ogg audio files
+    } else if (extension === 'mpga') {
+        extension = 'm4a'; // MPEG audio files
+    } else if (extension === 'markdown') {
+        extension = 'md'; // Markdown files
     }
 
     if (existsSync(path.join('./assets', `${filename}.${extension}`))) {
