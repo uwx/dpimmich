@@ -1,8 +1,7 @@
 import path, { resolve } from 'node:path';
 import os from 'node:os';
 import {upload} from './asset.js';
-import 'dotenv/config';
-import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, utimes, writeFile } from 'node:fs/promises';
 import { createWriteStream, existsSync } from 'node:fs';
 import { crawl } from './utils.js';
 import { Readable } from 'node:stream';
@@ -15,7 +14,7 @@ import 'dotenv/config';
 
 const defaultConfigDirectory = path.join(os.homedir(), '.config/immich/');
 
-const jsons = await fastGlob.glob(path.join(process.env.DISCORD_DATA_PACKAGE_DIR!, 'messages/**/messages.json').replace(/\\/g, '/'), {
+const jsons = await fastGlob.glob(path.join(process.env.DISCORD_DATA_PACKAGE_DIR!, 'Messages/**/messages.json').replace(/\\/g, '/'), {
     absolute: true,
     caseSensitiveMatch: false,
     dot: true,
@@ -61,16 +60,30 @@ function convertSnowflakeToDate(snowflake: number, epoch = DISCORD_EPOCH) {
 	return new Date(Number(milliseconds) + epoch)
 }
 
-async function download(ts: string, attachment: string) {
-    const hash = createHash('sha1').update(attachment).digest('hex');
+let downloaded: Record<string, string> = {};
 
-    const filename = `${ts}-${hash}-${new URL(attachment).pathname.split('/').pop()?.replace(/\..+?$/,'') ?? ''}`; // remove extension if any
-    const originalExtension = new URL(attachment).pathname.split('/').pop()?.split('.').pop();
+if (existsSync('./downloaded.json')) {
+    downloaded = JSON.parse(await readFile('./downloaded.json', 'utf-8')) as Record<string, string>;
+}
+
+async function download(ts: Date, attachment: string) {
+    const usefulUrlPart = new URL(attachment).pathname;
+
+    if (usefulUrlPart in downloaded) {
+        return resolve('./assets', downloaded[usefulUrlPart]);
+    }
+
+    const hash = createHash('sha1').update(usefulUrlPart).digest('hex').slice(0, 8);
+
+    const filename = `${ts.toISOString().replace(/:/g, '-')}-${hash}-${usefulUrlPart.split('/').pop()?.replace(/\..+?$/,'') ?? ''}`; // remove extension if any
+    const originalExtension = usefulUrlPart.split('/').pop()?.split('.').pop();
+
+    // console.log(originalExtension);
 
     const res = await fetch(attachment);
     const contentType = res.headers.get('content-type');
 
-    let extension = mime.getExtension(contentType || 'application/octet-stream') || originalExtension || 'bin';
+    let extension = mime.getExtension(contentType || 'application/octet-stream') || 'bin';
     if (extension === 'qt') {
         extension = 'mov'; // QuickTime video files
     } else if (extension === 'oga') {
@@ -79,14 +92,23 @@ async function download(ts: string, attachment: string) {
         extension = 'm4a'; // MPEG audio files
     } else if (extension === 'markdown') {
         extension = 'md'; // Markdown files
+    } else if (extension === 'bin' || extension === 'txt') {
+        extension = originalExtension || extension; // fallback to original extension if any
     }
 
-    if (existsSync(path.join('./assets', `${filename}.${extension}`))) {
+    if (!res.ok) {
+        console.error(`Failed to download ${attachment}: ${res.status} ${res.statusText}`);
+    }
+
+    if (existsSync(resolve('./assets', `${filename}.${extension}`))) {
         return resolve('./assets', `${filename}.${extension}`);
     }
 
-    await finished(Readable.fromWeb(res.body!).pipe(createWriteStream(path.join('./assets', `${filename}.${extension}`))));
-    
+    await finished(Readable.fromWeb(res.body!).pipe(createWriteStream(resolve('./assets', `${filename}.${extension}`))));
+    downloaded[usefulUrlPart] = `${filename}.${extension}`;
+
+    await utimes(resolve('./assets', `${filename}.${extension}`), ts, ts);
+
     return resolve('./assets', `${filename}.${extension}`);
 }
 
@@ -97,20 +119,29 @@ for (const jsonPath of jsons) {
         console.log(`  Message ${message.ID} from ${message.Timestamp}...`);
 
         if (message.Attachments && !Array.isArray(message.Attachments)) {
-            const thePath = await download(message.Timestamp.replace(/:/g, '-'), message.Attachments);
+            const date = convertSnowflakeToDate(message.ID);
+            const thePath = await download(date, message.Attachments);
 
-            timestamps[thePath] = convertSnowflakeToDate(message.ID);
+            timestamps[thePath] = date;
         } else if (Array.isArray(message.Attachments) && message.Attachments.length > 0) {
             for (const attachmentUrl of message.Attachments) {
-                const thePath = await download(message.Timestamp.replace(/:/g, '-'), attachmentUrl);
+                const date = convertSnowflakeToDate(message.ID);
+                const thePath = await download(date, attachmentUrl);
 
-                timestamps[thePath] = convertSnowflakeToDate(message.ID);
+                timestamps[thePath] = date;
             }
         }
     }
 }
 
-writeFile('./timestamps.json', JSON.stringify(timestamps, null, 2));
+process.on('uncaughtException', (err) => {
+    writeFile('./timestamps.json', JSON.stringify(timestamps, null, 2));
+    writeFile('./downloaded.json', JSON.stringify(downloaded, null, 2));
+    
+    console.error(`${new Date().toUTCString()} uncaughtException:`, err.message);
+    console.error(err.stack);
+    process.exit(1);
+});
 
 await upload(
     Object.keys(timestamps),
