@@ -2,7 +2,7 @@ import path, { resolve } from 'node:path';
 import os from 'node:os';
 import {upload} from './asset.js';
 import { mkdir, readdir, readFile, utimes, writeFile } from 'node:fs/promises';
-import { createWriteStream, existsSync } from 'node:fs';
+import { createWriteStream, existsSync, writeFileSync } from 'node:fs';
 import { crawl } from './utils.js';
 import { Readable } from 'node:stream';
 import { createHash } from 'node:crypto';
@@ -134,12 +134,12 @@ for (const jsonPath of jsons) {
     }
 }
 
-writeFile('./timestamps.json', JSON.stringify(timestamps, null, 2));
-writeFile('./downloaded.json', JSON.stringify(downloaded, null, 2));
+await writeFile('./timestamps.json', JSON.stringify(timestamps, null, 2));
+await writeFile('./downloaded.json', JSON.stringify(downloaded, null, 2));
 
 process.on('uncaughtException', (err) => {
-    writeFile('./timestamps.json', JSON.stringify(timestamps, null, 2));
-    writeFile('./downloaded.json', JSON.stringify(downloaded, null, 2));
+    writeFileSync('./timestamps.json', JSON.stringify(timestamps, null, 2));
+    writeFileSync('./downloaded.json', JSON.stringify(downloaded, null, 2));
     
     console.error(`${new Date().toUTCString()} uncaughtException:`, err.message);
     console.error(err.stack);
