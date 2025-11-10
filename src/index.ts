@@ -67,7 +67,7 @@ if (existsSync('./downloaded.json')) {
 }
 
 async function download(ts: Date, attachment: string) {
-    const usefulUrlPart = new URL(attachment).pathname;
+    const usefulUrlPart = new URL(attachment).pathname.slice(0, 60); // limit length to avoid issues
 
     if (usefulUrlPart in downloaded) {
         return resolve('./assets', downloaded[usefulUrlPart]);
@@ -133,6 +133,9 @@ for (const jsonPath of jsons) {
         }
     }
 }
+
+writeFile('./timestamps.json', JSON.stringify(timestamps, null, 2));
+writeFile('./downloaded.json', JSON.stringify(downloaded, null, 2));
 
 process.on('uncaughtException', (err) => {
     writeFile('./timestamps.json', JSON.stringify(timestamps, null, 2));
