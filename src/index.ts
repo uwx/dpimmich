@@ -62,12 +62,36 @@ function convertSnowflakeToDate(snowflake: number, epoch = DISCORD_EPOCH) {
 
 let downloaded: Record<string, string> = {};
 
+process.on('uncaughtException', (err) => {
+    writeFileSync('./timestamps.json', JSON.stringify(timestamps, null, 2));
+    writeFileSync('./downloaded.json', JSON.stringify(downloaded, null, 2));
+    
+    console.error(`${new Date().toUTCString()} uncaughtException:`, err.message);
+    console.error(err.stack);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    writeFileSync('./timestamps.json', JSON.stringify(timestamps, null, 2));
+    writeFileSync('./downloaded.json', JSON.stringify(downloaded, null, 2));
+
+    console.error(`${new Date().toUTCString()} unhandledRejection:`, reason);
+    process.exit(1);
+});
+
+process.on('SIGINT', () => {
+    writeFileSync('./timestamps.json', JSON.stringify(timestamps, null, 2));
+    writeFileSync('./downloaded.json', JSON.stringify(downloaded, null, 2));
+    console.log('Process interrupted. Exiting gracefully...');
+    process.exit(0);
+});
+
 if (existsSync('./downloaded.json')) {
     downloaded = JSON.parse(await readFile('./downloaded.json', 'utf-8')) as Record<string, string>;
 }
 
 async function download(ts: Date, attachment: string) {
-    const usefulUrlPart = new URL(attachment).pathname.slice(0, 60); // limit length to avoid issues
+    const usefulUrlPart = new URL(attachment).pathname;
 
     if (usefulUrlPart in downloaded) {
         return resolve('./assets', downloaded[usefulUrlPart]);
@@ -75,7 +99,7 @@ async function download(ts: Date, attachment: string) {
 
     const hash = createHash('sha1').update(usefulUrlPart).digest('hex').slice(0, 8);
 
-    const filename = `${ts.toISOString().replace(/:/g, '-')}-${hash}-${usefulUrlPart.split('/').pop()?.replace(/\..+?$/,'') ?? ''}`; // remove extension if any
+    const filename = `${ts.toISOString().replace(/:/g, '-')}-${hash}-${usefulUrlPart.split('/').pop()?.replace(/\..+?$/,'').slice(0, 60) ?? ''}`; // remove extension if any, limit length to avoid issues
     const originalExtension = usefulUrlPart.split('/').pop()?.split('.').pop();
 
     // console.log(originalExtension);
@@ -101,6 +125,7 @@ async function download(ts: Date, attachment: string) {
     }
 
     if (existsSync(resolve('./assets', `${filename}.${extension}`))) {
+        downloaded[usefulUrlPart] = `${filename}.${extension}`;
         return resolve('./assets', `${filename}.${extension}`);
     }
 
@@ -136,15 +161,6 @@ for (const jsonPath of jsons) {
 
 await writeFile('./timestamps.json', JSON.stringify(timestamps, null, 2));
 await writeFile('./downloaded.json', JSON.stringify(downloaded, null, 2));
-
-process.on('uncaughtException', (err) => {
-    writeFileSync('./timestamps.json', JSON.stringify(timestamps, null, 2));
-    writeFileSync('./downloaded.json', JSON.stringify(downloaded, null, 2));
-    
-    console.error(`${new Date().toUTCString()} uncaughtException:`, err.message);
-    console.error(err.stack);
-    process.exit(1);
-});
 
 await upload(
     Object.keys(timestamps),

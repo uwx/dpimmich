@@ -2,3 +2,4 @@ assets/
 node_modules
 .env
 timestamps.json
+downloaded.json
