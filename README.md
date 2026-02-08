@@ -28,12 +28,13 @@ DISCORD_DATA_PACKAGE_DIR=/path/to/discord/data/package
 
 ### Basic Usage
 
-Run the tool to upload all Steam screenshots:
+Run the tool to upload all Discord screenshots:
 
 ```bash
 pnpm dlx tsx src/index.ts
 ```
 
 ## License
+
 
 AGPL
