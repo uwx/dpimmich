@@ -6,8 +6,8 @@ A Node.js tool that extracts media attachments from Discord data packages and up
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/uwx/steammich.git
-cd steammich
+git clone https://github.com/uwx/dpimmich.git
+cd dpimmich
 ```
 
 2. Install dependencies:
@@ -38,3 +38,4 @@ pnpm dlx tsx src/index.ts
 
 
 AGPL
+
